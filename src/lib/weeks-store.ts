@@ -1,10 +1,6 @@
 import { Redis } from "@upstash/redis";
 import { WEEK_1, WEEK_2, RECIPES, GROCERY_LIST, GROCERY_LIST_WEEK_2, WorkoutDay, Recipe, GroceryItem } from "./data";
 
-// Stage 1: storage + merge layer for auto-generated weeks (Week 3+).
-// Not yet wired into any page — purely additive, safe to deploy alongside
-// the existing static Week 1 / Week 2 flow.
-
 export type GeneratedWeek = {
   weekNumber: number;
   days: WorkoutDay[];
@@ -42,14 +38,21 @@ export async function saveGeneratedWeek(week: GeneratedWeek): Promise<void> {
   }
 }
 
+// Weeks 1 and 2 are fully static now (see data.ts). Ignore any older
+// generated week stored under weekNumber 1 or 2 -- it would otherwise
+// duplicate or conflict with the static day/recipe data.
+function activeGeneratedWeeks(weeks: GeneratedWeek[]): GeneratedWeek[] {
+  return weeks.filter((w) => w.weekNumber > 2);
+}
+
 export async function getAllDays(): Promise<WorkoutDay[]> {
-  const generated = await getGeneratedWeeks();
+  const generated = activeGeneratedWeeks(await getGeneratedWeeks());
   const generatedDays = generated.flatMap((w) => w.days);
   return [...WEEK_1, ...WEEK_2, ...generatedDays].sort((a, b) => a.dayNumber - b.dayNumber);
 }
 
 export async function getAllRecipes(): Promise<Recipe[]> {
-  const generated = await getGeneratedWeeks();
+  const generated = activeGeneratedWeeks(await getGeneratedWeeks());
   const generatedRecipes = generated.flatMap((w) => w.recipes);
   return [...RECIPES, ...generatedRecipes];
 }
@@ -57,7 +60,7 @@ export async function getAllRecipes(): Promise<Recipe[]> {
 export async function getGroceryListForWeek(weekNumber: number): Promise<GroceryItem[]> {
   if (weekNumber === 1) return GROCERY_LIST;
   if (weekNumber === 2) return GROCERY_LIST_WEEK_2;
-  const generated = await getGeneratedWeeks();
+  const generated = activeGeneratedWeeks(await getGeneratedWeeks());
   const week = generated.find((w) => w.weekNumber === weekNumber);
   return week?.groceryList ?? [];
 }
@@ -70,7 +73,6 @@ export async function getAvailableWeekNumbers(): Promise<number[]> {
   return Array.from({ length: maxWeek }, (_, i) => i + 1);
 }
 
-// Used as "don't repeat these" context when prompting Claude to generate a new week.
 export async function getUsedRecipeContext(): Promise<string> {
   const recipes = await getAllRecipes();
   const lunchDinner = recipes.filter((r) => r.meal === "lunch" || r.meal === "dinner");
