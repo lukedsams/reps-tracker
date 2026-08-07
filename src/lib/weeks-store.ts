@@ -38,11 +38,14 @@ export async function saveGeneratedWeek(week: GeneratedWeek): Promise<void> {
   }
 }
 
-// Weeks 1 and 2 are fully static now (see data.ts). Ignore any older
-// generated week stored under weekNumber 1 or 2 -- it would otherwise
-// duplicate or conflict with the static day/recipe data.
+// Weeks 1 and 2 are fully static now (see data.ts). Any generated week whose
+// days don't extend past the static Week 2 range is leftover/stale data from
+// an earlier test run against old dates -- ignore it entirely, regardless of
+// what weekNumber it's labeled with (that label can be stale too).
+const STATIC_CUTOFF_DATE = WEEK_2[WEEK_2.length - 1].date;
+
 function activeGeneratedWeeks(weeks: GeneratedWeek[]): GeneratedWeek[] {
-  return weeks.filter((w) => w.weekNumber > 2);
+  return weeks.filter((w) => w.days.some((d) => d.date > STATIC_CUTOFF_DATE));
 }
 
 export async function getAllDays(): Promise<WorkoutDay[]> {
