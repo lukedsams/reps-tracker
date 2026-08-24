@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAllDays, getUsedRecipeContext, saveGeneratedWeek } from "@/lib/weeks-store";
 import { workoutSetForWeek, TARGETS, Recipe, WorkoutDay, GroceryItem } from "@/lib/data";
 
+export const maxDuration = 60;
+
+export const maxDuration = 60;
+
 const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const SHORT_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const VEG_DAYS = new Set(["Thursday", "Sunday"]);
