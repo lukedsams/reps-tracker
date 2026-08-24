@@ -12,7 +12,7 @@ const FOCUS_TITLE: Record<string, string> = {
 
 function addDays(dateISO: string, n: number): string {
   const d = new Date(dateISO + "T00:00:00");
-  d.setDate(d.getDate() + n);
+  d.setDate(d.getDate() + n)
   return d.toISOString().slice(0, 10);
 }
 
@@ -84,7 +84,7 @@ async function callClaude(weekNumber: number): Promise<ClaudeWeekResponse> {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
+      model: "claude-sonnet-5",
       max_tokens: 8000,
       messages: [{ role: "user", content: prompt }],
     }),
