@@ -213,9 +213,13 @@ function buildWeek(weekNumber: number, startDate: string, startDayNumber: number
 
 async function handleGenerate(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (secret) {
+  const manualKey = process.env.MANUAL_TRIGGER_KEY;
+  if (secret || manualKey) {
     const authHeader = request.headers.get("authorization");
-    if (authHeader !== "Bearer " + secret) {
+    const urlKey = new URL(request.url).searchParams.get("key");
+    const isCronAuth = secret && authHeader === "Bearer " + secret;
+    const isManualAuth = manualKey && urlKey === manualKey;
+    if (!isCronAuth && !isManualAuth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
